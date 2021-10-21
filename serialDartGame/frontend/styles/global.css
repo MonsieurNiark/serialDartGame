@@ -1,0 +1,18 @@
+html {
+}
+
+.default-background {
+	background-color: #e7f0f2;
+	box-shadow: rgba(185,211,215,1) 0px 11px 8px -10px inset, 
+				rgba(185,211,215,1) 0px -32px 8px -15px inset;
+}
+
+.white-radius {
+	background-color: white;
+	border-radius: 5px;
+}
+
+.tuile-homepage {
+	margin-left: 100px;
+	margin-right: 100px;
+}

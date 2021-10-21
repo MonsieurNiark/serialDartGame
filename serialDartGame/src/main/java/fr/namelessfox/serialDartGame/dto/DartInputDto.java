@@ -11,11 +11,11 @@ public class DartInputDto {
 
 	private final Integer id;
 	
-	private final GameDto gameDto;
+	private final GameDto game;
 	
-	private final PlayerDto playerDto;
+	private final PlayerDto player;
 	
 	private final Integer score;
 	
-	private final Integer input;
+	private final String input;
 }

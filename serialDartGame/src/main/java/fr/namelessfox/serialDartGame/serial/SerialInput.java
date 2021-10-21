@@ -62,45 +62,58 @@ public class SerialInput {
 	    }
 	}
 	
-	public void readData(Consumer<DartCaseDto> consumerSuccess) {
-		while(true) {
-			
-		
+	public boolean isOpen() {
+		return serialPort.isOpened();
+	}
+	
+	public void close() {
 		try {
-			dataReading = serialPort.readString(1);
+			serialPort.purgePort(1);
+			serialPort.purgePort(2);
+			serialPort.closePort();
 		} catch (SerialPortException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-    	
-    	if(dataReading != null) {
-    		logger.debug(dataReading);
-    		if(dataReading.equals("%")) {
-    			logger.debug("Start reading");
-    			isWriting = true;
-
-    		}
-    		if(isWriting) {
-    			if(dataReading.equals("$")) {
-    				logger.debug("Stop reading");
-    				logger.debug("Result: "+dataParsed);
-    				logger.debug(Character.getNumericValue(dataParsed.charAt(0)));
-
-    				logger.debug(Character.getNumericValue(dataParsed.charAt(2)));
-    				
-    				Optional<DartCaseDto> caseInput = dartCaseService.getDartCaseByCoord(Character.getNumericValue(dataParsed.charAt(0)),
-    						Character.getNumericValue(dataParsed.charAt(2)));
-    				if(caseInput.isPresent()) {
-    					logger.info("Hit {} for {} points !", caseInput.get().getLabel(), caseInput.get().getValue());
-    					consumerSuccess.accept(caseInput.get());
-    				}
-    				dataParsed = "";
-    				isWriting = false;
-    			} else if (!dataReading.equals("%")){
-    				dataParsed = dataParsed + dataReading;
-    			}
-    		}
-    	}
+	}
+	
+	public void readData(Consumer<DartCaseDto> consumerSuccess) {
+		while(true) {
+			try {
+				dataReading = serialPort.readString(1);
+			} catch (SerialPortException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+	    	
+	    	if(dataReading != null) {
+	    		logger.debug(dataReading);
+	    		if(dataReading.equals("%")) {
+	    			logger.debug("Start reading");
+	    			isWriting = true;
+	
+	    		}
+	    		if(isWriting) {
+	    			if(dataReading.equals("$")) {
+	    				logger.debug("Stop reading");
+	    				logger.debug("Result: "+dataParsed);
+	    				logger.debug(Character.getNumericValue(dataParsed.charAt(0)));
+	
+	    				logger.debug(Character.getNumericValue(dataParsed.charAt(2)));
+	    				
+	    				Optional<DartCaseDto> caseInput = dartCaseService.getDartCaseByCoord(Character.getNumericValue(dataParsed.charAt(0)),
+	    						Character.getNumericValue(dataParsed.charAt(2)));
+	    				if(caseInput.isPresent()) {
+	    					logger.info("Hit {} for {} points !", caseInput.get().getLabel(), caseInput.get().getValue());
+	    					consumerSuccess.accept(caseInput.get());
+	    				}
+	    				dataParsed = "";
+	    				isWriting = false;
+	    			} else if (!dataReading.equals("%")){
+	    				dataParsed = dataParsed + dataReading;
+	    			}
+	    		}
+	    	}
 		}
 	}
 }

@@ -20,6 +20,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dependency.JavaScript;
 import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
@@ -81,7 +82,21 @@ public class PlayingView extends VerticalLayout implements BeforeEnterObserver, 
 
 	private Button joueurSuivantButton;
 	private Button debugButton;
-
+	
+	private Image flechette1 = new Image("img/flechette.png", "flechette1");
+	private Image flechette2 = new Image("img/flechette.png", "flechette2");
+	private Image flechette3 = new Image("img/flechette.png", "flechette3");
+	
+	private Image flechetteOff1 = new Image("img/flechette-off.png", "flechette1");
+	private Image flechetteOff2 = new Image("img/flechette-off.png", "flechette2");
+	private Image flechetteOff3 = new Image("img/flechette-off.png", "flechette3");
+	
+	private HorizontalLayout joueurHL;
+	private HorizontalLayout scoreHL;
+	private HorizontalLayout victoireHL;
+	private HorizontalLayout serialPortHL;
+	private HorizontalLayout caseHL;
+	private Label victoireUsername;
 	@Autowired
 	public PlayingView(GameService gameService, DartCaseService dartCaseService, DartInputService dartInputService) {
 		this.gameService = gameService;
@@ -136,30 +151,61 @@ public class PlayingView extends VerticalLayout implements BeforeEnterObserver, 
 		debugButton = new Button("debug");
 
 		// Info joueur actuel
-		Label joueurLabel = new Label("Joueur : ");
 		joueurActuelLabel = new Label("xxx");
-		final HorizontalLayout joueurHL = new HorizontalLayout();
+		joueurActuelLabel.setClassName("info-principale");
+		joueurHL = new HorizontalLayout();
 		// Joueur suivant
 		joueurSuivantButton = new Button("Joueur suivant");
 		joueurSuivantButton.setIcon(VaadinIcon.ARROW_RIGHT.create());
 		joueurSuivantButton.getStyle().set("color", "green");
-		joueurHL.add(joueurLabel, joueurActuelLabel, joueurSuivantButton);
+		joueurSuivantButton.setHeightFull();
+		joueurSuivantButton.setWidthFull();
+		flechette1.setHeight("150px");
+		flechette1.setWidth("100px");
+		flechette2.setHeight("150px");
+		flechette2.setWidth("100px");
+		flechette3.setHeight("150px");
+		flechette3.setWidth("100px");
+		
+		flechetteOff1.setHeight("150px");
+		flechetteOff1.setWidth("100px");
+		flechetteOff1.setVisible(false);
+		flechetteOff2.setHeight("150px");
+		flechetteOff2.setWidth("100px");
+		flechetteOff2.setVisible(false);
+		flechetteOff3.setHeight("150px");
+		flechetteOff3.setWidth("100px");
+		flechetteOff3.setVisible(false);
+		joueurHL.add(joueurActuelLabel,flechette1,flechette2,flechette3, flechetteOff1,flechetteOff2, flechetteOff3,joueurSuivantButton);
 		joueurHL.setAlignItems(Alignment.CENTER);
 
 		// Info score
 		Label score = new Label("Score restant : ");
+		score.setClassName("info-principale");
 		scoreNumber = new Label("xxx");
-		final HorizontalLayout scoreHL = new HorizontalLayout();
+		scoreNumber.setClassName("info-principale");
+		scoreHL = new HorizontalLayout();
 		scoreHL.add(score, scoreNumber);
 
+		//Victoire de
+		Label victoire = new Label("Victoire de ");
+		victoire.setClassName("info-principale");
+		victoireUsername = new Label();
+		victoireUsername.setClassName("info-principale");
+		victoireHL = new HorizontalLayout();
+		victoireHL.add(victoire, victoireUsername);
+		victoireHL.setVisible(false);
+		
 		// Case touché
-		final HorizontalLayout caseHL = new HorizontalLayout();
+		caseHL = new HorizontalLayout();
 		Label caseTouche = new Label("Points : ");
+		caseTouche.setClassName("info-principale");
 		caseToucheNumber = new Label("xxx");
+		caseToucheNumber.setClassName("info-principale");
 		caseHL.add(caseTouche, caseToucheNumber);
 
 		// Gestion port serial
-		final HorizontalLayout serialPortHL = new HorizontalLayout();
+		serialPortHL = new HorizontalLayout();
 		Select<String> selectPortCom = new Select<>();
 		selectPortCom.setItems(serialInput.getPortNames());
 		Button startSerialPort = new Button("Start COM", new Icon(VaadinIcon.START_COG));
@@ -192,7 +238,7 @@ public class PlayingView extends VerticalLayout implements BeforeEnterObserver, 
 		playersGrid.removeColumnByKey("nombreDeLancee");
 		playersGrid.setColumns("username", "nombreDeLanceeTotal", "score", "scoreRestant");
 		playersGrid.setItems(joueurs);
-		mainLayout.add(gameName, debugButton, serialPortHL, caseHL, scoreHL, joueurHL, playersGrid);
+		mainLayout.add(gameName, victoireHL, caseHL, scoreHL, joueurHL, playersGrid,serialPortHL);
 		mainLayout.setAlignItems(Alignment.CENTER);
 		add(mainLayout);
 		setClassName("default-background");
@@ -210,7 +256,7 @@ public class PlayingView extends VerticalLayout implements BeforeEnterObserver, 
 	
 	private void loadCurrentGameIfExist() {
 		logger.info("loadCurrentGameIfExist");
-		gameDto.getPlayers();
+		PlayerDto playerDtoVictoire = null;
 		for(PlayerDto player : gameDto.getPlayers()) {
 			int nbLanceeTotal = 0;
 			List<DartInputDto> darts = dartInputService.findInputsForPlayerForGame(gameDto.getId(), player.getId());
@@ -220,7 +266,24 @@ public class PlayingView extends VerticalLayout implements BeforeEnterObserver, 
 			}
 			player.setNombreDeLanceeTotal(nbLanceeTotal);
 			player.setScoreRestant(gameDto.getGameType().getMaxScore() - player.getScore());
+			if(player.getScoreRestant() == 0) {
+				playerDtoVictoire = player;
+			}
 		}
+		if(playerDtoVictoire != null) {
+			loadVictoryGameExist(playerDtoVictoire);
+		}
+	}
+	
+	private void loadVictoryGameExist(PlayerDto playerDto) {
+		joueurHL.setVisible(false);
+		scoreHL.setVisible(false);
+		
+		victoireHL.setVisible(true);
+		serialPortHL.setVisible(false);
+		
+		caseHL.setVisible(false);
+		victoireUsername.setText(playerDto.getUsername());
 	}
 
 	@Override
@@ -308,6 +371,8 @@ public class PlayingView extends VerticalLayout implements BeforeEnterObserver, 
 						confirmNextPlayer = 0;
 						changementJoueur();
 						ui.access(() -> view.joueurSuivantButton.getStyle().set("color", "green"));
+						ui.access(
+								() -> view.scoreNumber.setText(String.valueOf(actualPlayer.getScoreRestant())));
 
 					}
 				}
@@ -321,26 +386,54 @@ public class PlayingView extends VerticalLayout implements BeforeEnterObserver, 
 
 						if (actualPlayer.getNombreDeLancee() <= 2
 								|| gameDto.getGameType().getLabel().equals("TRAINING")) {
-							saveDartInput(t);
 							if (actualPlayer.getNombreDeLancee() == 0) { // On sauvegarde a la premiere flechette
 								previousScore = actualPlayer.getScore();
 								previousScoreLeft = actualPlayer.getScoreRestant();
 							}
 							actualPlayer.setNombreDeLancee(actualPlayer.getNombreDeLancee() + 1);
 							actualPlayer.setNombreDeLanceeTotal(actualPlayer.getNombreDeLanceeTotal() + 1);
+							if(actualPlayer.getNombreDeLancee() == 1) {
+								ui.access(() -> view.flechette3.setVisible(false));
+								ui.access(() -> view.flechetteOff3.setVisible(true));
+							} else if (actualPlayer.getNombreDeLancee() == 2) {
+								ui.access(() -> view.flechette2.setVisible(false));
+								ui.access(() -> view.flechetteOff2.setVisible(true));
+							} else if (actualPlayer.getNombreDeLancee() == 3) {
+								ui.access(() -> view.flechette1.setVisible(false));
+								ui.access(() -> view.flechetteOff1.setVisible(true));
+							}
+							
+							
 							if ((actualPlayer.getScoreRestant() - t.getValue()) == 0) { // Check victoire
+								actualPlayer.setScore(actualPlayer.getScore() + t.getValue());
+								actualPlayer.setScoreRestant(actualPlayer.getScoreRestant() - t.getValue());
+								saveDartInput(t);
+								ui.access(
+										() -> view.scoreNumber.setText(String.valueOf(actualPlayer.getScoreRestant())));
 								victoire();
 							} else if (actualPlayer.getScoreRestant() - t.getValue() < 0) { // Score precedent +
 																							// changement joueur
-
 								scoreFailed();
 							} else {
+								saveDartInput(t);
 								actualPlayer.setScore(actualPlayer.getScore() + t.getValue());
 								actualPlayer.setScoreRestant(actualPlayer.getScoreRestant() - t.getValue());
 								ui.access(
 										() -> view.scoreNumber.setText(String.valueOf(actualPlayer.getScoreRestant())));
 							}
 						}
+					} else {
+						players.stream().forEach(new Consumer<PlayerDto>() {
+
+							@Override
+							public void accept(PlayerDto t) {
+								// TODO Auto-generated method stub
+								if(t.getScoreRestant() == 0) {
+									actualPlayer = t;
+									victoire();
+								}
+							}
+						});
 					}
 
 					ui.access(() -> view.playersGrid.getDataProvider().refreshAll());
@@ -357,6 +450,14 @@ public class PlayingView extends VerticalLayout implements BeforeEnterObserver, 
 			}
 			actualPlayer = players.get(indexPlayer);
 			ui.access(() -> view.joueurActuelLabel.setText(actualPlayer.getUsername()));
+			
+			ui.access(() -> view.flechette1.setVisible(true));
+			ui.access(() -> view.flechette2.setVisible(true));
+			ui.access(() -> view.flechette3.setVisible(true));
+			
+			ui.access(() -> view.flechetteOff1.setVisible(false));
+			ui.access(() -> view.flechetteOff2.setVisible(false));
+			ui.access(() -> view.flechetteOff3.setVisible(false));
 			System.out.println("Au tour de " + actualPlayer.getUsername());
 		}
 
@@ -364,13 +465,19 @@ public class PlayingView extends VerticalLayout implements BeforeEnterObserver, 
 			System.out.println("victoire de " + actualPlayer.getUsername());
 			gameService.setGameActive(false, gameDto.getId());
 			isActive = false;
+			ui.access(() -> view.joueurHL.setVisible(false));
+			ui.access(() -> view.scoreHL.setVisible(false));
+			
+			ui.access(() -> view.victoireHL.setVisible(true));
+			ui.access(() -> view.victoireUsername.setText(actualPlayer.getUsername()));
+			
 		}
 
 		private void scoreFailed() {
 			System.out.println("BUZZ de " + actualPlayer.getUsername());
 			actualPlayer.setScore(previousScore);
 			actualPlayer.setScoreRestant(previousScoreLeft);
-			changementJoueur();
+			actualPlayer.setNombreDeLancee(3);
 		}
 
 		private void saveDartInput(DartCaseDto dartCaseDto) {

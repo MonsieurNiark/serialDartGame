@@ -52,7 +52,7 @@ import fr.namelessfox.serialDartGame.vaadin.config.ConstantesRoutes;
 import net.bytebuddy.dynamic.Nexus;
 
 @Route(value = ConstantesRoutes.PLAYING, layout = MainLayout.class)
-public class PlayingView extends VerticalLayout implements BeforeEnterObserver {
+public class PlayingView extends VerticalLayout implements BeforeEnterObserver, BeforeLeaveObserver {
 
 	private GameDto gameInput;
 	private GameDto gameDto;
@@ -165,7 +165,10 @@ public class PlayingView extends VerticalLayout implements BeforeEnterObserver {
 				if(selectPortCom.getValue() != null) {
 					serialInput.setPort(selectPortCom.getValue());
 					serialInput.startSerialReading();
-					thread.start();
+					if(!thread.isAlive()) {
+						thread.start();
+					}
+					
 					
 				}
 			}
@@ -208,6 +211,20 @@ public class PlayingView extends VerticalLayout implements BeforeEnterObserver {
 
         
     }
+	
+	@Override
+	public void beforeLeave(BeforeLeaveEvent event) {
+		// TODO Auto-generated method stub
+		try {
+			if(serialInput.isOpen()) {
+				serialInput.close();
+			}
+		} catch (Exception e) {
+			
+		}
+		
+	}
+	
 	
 	private static class FeederThread extends Thread {
         private final UI ui;
@@ -266,7 +283,7 @@ public class PlayingView extends VerticalLayout implements BeforeEnterObserver {
 				@Override
 				public void accept(DartCaseDto t) {
 					ui.access(() -> view.caseToucheNumber.setText(String.valueOf(t.getValue())));
-					if(actualPlayer.getNombreDeLancee() <= 2) {
+					if(actualPlayer.getNombreDeLancee() <= 2 || gameDto.getGameType().getLabel().equals("TRAINING")) {
 						saveDartInput(t);
 						if(actualPlayer.getNombreDeLancee() == 0) { //On sauvegarde a la premiere flechette
 							previousScore = actualPlayer.getScore();
@@ -326,5 +343,6 @@ public class PlayingView extends VerticalLayout implements BeforeEnterObserver {
         }
         
     }
+
 	
 }

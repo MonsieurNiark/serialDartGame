@@ -1,5 +1,7 @@
 package fr.namelessfox.serialDartGame.service.impl;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -26,6 +28,11 @@ public class DartInputServiceImpl implements DartInputService {
 		DartInput dartInput = dartInputMapper.dtoToEntity(dartInputDto);
 		
 		return dartInputMapper.entityToDto(dartInputRepository.save(dartInput));
+	}
+
+	@Override
+	public List<DartInputDto> findInputsForPlayerForGame(Integer id_game, Integer id_player) {
+		return dartInputMapper.entityToDtos(dartInputRepository.findInputsForPlayerForGame(id_game, id_player));
 	}
 
 }

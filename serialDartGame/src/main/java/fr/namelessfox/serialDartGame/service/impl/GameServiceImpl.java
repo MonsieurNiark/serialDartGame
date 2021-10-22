@@ -47,4 +47,14 @@ public class GameServiceImpl implements GameService{
 		
 	}
 
+	@Override
+	public void setGameActive(boolean active, Integer id) {
+		gameRepository.setGameActive(active, id);
+	}
+
+	@Override
+	public List<GameDto> findAllGameDtos() {
+		return gameMapper.entityToDtos(gameRepository.findAll());
+	}
+
 }

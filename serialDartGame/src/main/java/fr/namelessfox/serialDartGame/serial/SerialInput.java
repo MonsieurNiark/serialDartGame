@@ -58,6 +58,7 @@ public class SerialInput {
 	       
 	    }
 	    catch (SerialPortException ex) {
+	    	close();
 	        logger.error(ex);
 	    }
 	}

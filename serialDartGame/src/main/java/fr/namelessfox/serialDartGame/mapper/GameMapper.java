@@ -1,5 +1,7 @@
 package fr.namelessfox.serialDartGame.mapper;
 
+import java.util.List;
+
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValueMappingStrategy;
 
@@ -12,5 +14,7 @@ public interface GameMapper {
 	GameDto entityToDto(final Game game);
 	
 	Game dtoToEntity(final GameDto gameDto);
-
+	
+	List<GameDto> entityToDtos(final List<Game> games);
+	
 }

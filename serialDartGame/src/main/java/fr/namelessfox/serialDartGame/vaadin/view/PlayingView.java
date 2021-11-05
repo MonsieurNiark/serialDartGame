@@ -1,9 +1,6 @@
 package fr.namelessfox.serialDartGame.vaadin.view;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 import org.apache.logging.log4j.LogManager;
@@ -13,25 +10,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.ComponentEventListener;
-import com.vaadin.flow.component.ComponentUtil;
-import com.vaadin.flow.component.PollEvent;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.dependency.JavaScript;
-import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Label;
-import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.page.Page;
-import com.vaadin.flow.component.page.Push;
 import com.vaadin.flow.component.select.Select;
-import com.vaadin.flow.data.provider.DataProvider;
-import com.vaadin.flow.dom.Element;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.BeforeLeaveEvent;
@@ -39,8 +27,6 @@ import com.vaadin.flow.router.BeforeLeaveObserver;
 import com.vaadin.flow.router.Location;
 import com.vaadin.flow.router.QueryParameters;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.server.Command;
-import com.vaadin.flow.shared.Registration;
 
 import fr.namelessfox.serialDartGame.dto.DartCaseDto;
 import fr.namelessfox.serialDartGame.dto.DartInputDto;
@@ -59,7 +45,6 @@ public class PlayingView extends VerticalLayout implements BeforeEnterObserver, 
 
 	private static Logger logger = LogManager.getLogger(PlayingView.class);
 
-	
 	private GameDto gameInput;
 	private GameDto gameDto;
 	private final GameService gameService;
@@ -70,7 +55,7 @@ public class PlayingView extends VerticalLayout implements BeforeEnterObserver, 
 
 	public static int i = 0;
 
-	private FeederThread thread;
+	private NormalGameThread thread;
 
 	private SerialInput serialInput;
 
@@ -82,21 +67,22 @@ public class PlayingView extends VerticalLayout implements BeforeEnterObserver, 
 
 	private Button joueurSuivantButton;
 	private Button debugButton;
-	
+
 	private Image flechette1 = new Image("img/flechette.png", "flechette1");
 	private Image flechette2 = new Image("img/flechette.png", "flechette2");
 	private Image flechette3 = new Image("img/flechette.png", "flechette3");
-	
+
 	private Image flechetteOff1 = new Image("img/flechette-off.png", "flechette1");
 	private Image flechetteOff2 = new Image("img/flechette-off.png", "flechette2");
 	private Image flechetteOff3 = new Image("img/flechette-off.png", "flechette3");
-	
+
 	private HorizontalLayout joueurHL;
 	private HorizontalLayout scoreHL;
 	private HorizontalLayout victoireHL;
 	private HorizontalLayout serialPortHL;
 	private HorizontalLayout caseHL;
 	private Label victoireUsername;
+
 	@Autowired
 	public PlayingView(GameService gameService, DartCaseService dartCaseService, DartInputService dartInputService) {
 		this.gameService = gameService;
@@ -154,6 +140,7 @@ public class PlayingView extends VerticalLayout implements BeforeEnterObserver, 
 		joueurActuelLabel = new Label("xxx");
 		joueurActuelLabel.setClassName("info-principale");
 		joueurHL = new HorizontalLayout();
+		
 		// Joueur suivant
 		joueurSuivantButton = new Button("Joueur suivant");
 		joueurSuivantButton.setIcon(VaadinIcon.ARROW_RIGHT.create());
@@ -166,7 +153,7 @@ public class PlayingView extends VerticalLayout implements BeforeEnterObserver, 
 		flechette2.setWidth("100px");
 		flechette3.setHeight("150px");
 		flechette3.setWidth("100px");
-		
+
 		flechetteOff1.setHeight("150px");
 		flechetteOff1.setWidth("100px");
 		flechetteOff1.setVisible(false);
@@ -176,7 +163,8 @@ public class PlayingView extends VerticalLayout implements BeforeEnterObserver, 
 		flechetteOff3.setHeight("150px");
 		flechetteOff3.setWidth("100px");
 		flechetteOff3.setVisible(false);
-		joueurHL.add(joueurActuelLabel,flechette1,flechette2,flechette3, flechetteOff1,flechetteOff2, flechetteOff3,joueurSuivantButton);
+		joueurHL.add(joueurActuelLabel, flechette1, flechette2, flechette3, flechetteOff1, flechetteOff2, flechetteOff3,
+				joueurSuivantButton);
 		joueurHL.setAlignItems(Alignment.CENTER);
 
 		// Info score
@@ -187,7 +175,7 @@ public class PlayingView extends VerticalLayout implements BeforeEnterObserver, 
 		scoreHL = new HorizontalLayout();
 		scoreHL.add(score, scoreNumber);
 
-		//Victoire de
+		// Victoire de
 		Label victoire = new Label("Victoire de ");
 		victoire.setClassName("info-principale");
 		victoireUsername = new Label();
@@ -195,7 +183,7 @@ public class PlayingView extends VerticalLayout implements BeforeEnterObserver, 
 		victoireHL = new HorizontalLayout();
 		victoireHL.add(victoire, victoireUsername);
 		victoireHL.setVisible(false);
-		
+
 		// Case touché
 		caseHL = new HorizontalLayout();
 		Label caseTouche = new Label("Points : ");
@@ -238,7 +226,7 @@ public class PlayingView extends VerticalLayout implements BeforeEnterObserver, 
 		playersGrid.removeColumnByKey("nombreDeLancee");
 		playersGrid.setColumns("username", "nombreDeLanceeTotal", "score", "scoreRestant");
 		playersGrid.setItems(joueurs);
-		mainLayout.add(gameName, victoireHL, caseHL, scoreHL, joueurHL, playersGrid,serialPortHL);
+		mainLayout.add(gameName, victoireHL, caseHL, scoreHL, joueurHL, playersGrid, serialPortHL);
 		mainLayout.setAlignItems(Alignment.CENTER);
 		add(mainLayout);
 		setClassName("default-background");
@@ -246,42 +234,42 @@ public class PlayingView extends VerticalLayout implements BeforeEnterObserver, 
 		setAlignItems(Alignment.CENTER);
 		loadCurrentGameIfExist();
 		logger.info("end view loading");
-		
+
 	}
 
 	private void createGame() {
 		logger.info("create game");
 		this.gameDto = gameService.save(gameInput);
 	}
-	
+
 	private void loadCurrentGameIfExist() {
 		logger.info("loadCurrentGameIfExist");
 		PlayerDto playerDtoVictoire = null;
-		for(PlayerDto player : gameDto.getPlayers()) {
+		for (PlayerDto player : gameDto.getPlayers()) {
 			int nbLanceeTotal = 0;
 			List<DartInputDto> darts = dartInputService.findInputsForPlayerForGame(gameDto.getId(), player.getId());
-			for(DartInputDto dartInputDto : darts) {
+			for (DartInputDto dartInputDto : darts) {
 				nbLanceeTotal++;
 				player.setScore(player.getScore() + dartInputDto.getScore());
 			}
 			player.setNombreDeLanceeTotal(nbLanceeTotal);
 			player.setScoreRestant(gameDto.getGameType().getMaxScore() - player.getScore());
-			if(player.getScoreRestant() == 0) {
+			if (player.getScoreRestant() == 0) {
 				playerDtoVictoire = player;
 			}
 		}
-		if(playerDtoVictoire != null) {
+		if (playerDtoVictoire != null) {
 			loadVictoryGameExist(playerDtoVictoire);
 		}
 	}
-	
+
 	private void loadVictoryGameExist(PlayerDto playerDto) {
 		joueurHL.setVisible(false);
 		scoreHL.setVisible(false);
-		
+
 		victoireHL.setVisible(true);
 		serialPortHL.setVisible(false);
-		
+
 		caseHL.setVisible(false);
 		victoireUsername.setText(playerDto.getUsername());
 	}
@@ -289,7 +277,7 @@ public class PlayingView extends VerticalLayout implements BeforeEnterObserver, 
 	@Override
 	protected void onAttach(AttachEvent attachEvent) {
 		logger.info("on attach");
-		thread = new FeederThread(attachEvent.getUI(), this, serialInput, joueurs, dartInputService, gameService);
+		thread = new NormalGameThread(attachEvent.getUI(), this, serialInput, joueurs, dartInputService, gameService);
 		thread.setGameDto(this.gameDto);
 
 	}
@@ -307,7 +295,7 @@ public class PlayingView extends VerticalLayout implements BeforeEnterObserver, 
 
 	}
 
-	private static class FeederThread extends Thread {
+	private static class NormalGameThread extends Thread {
 		private final UI ui;
 		private final PlayingView view;
 		private final SerialInput serialInput;
@@ -331,9 +319,9 @@ public class PlayingView extends VerticalLayout implements BeforeEnterObserver, 
 
 		private boolean isActive = true;
 
-		public FeederThread(UI ui, PlayingView view, SerialInput serialInput, List<PlayerDto> players,
+		public NormalGameThread(UI ui, PlayingView view, SerialInput serialInput, List<PlayerDto> players,
 				DartInputService dartInputService, GameService gameService) {
-			logger.info("FeederThread constructor");
+			logger.info("NormalGameThread constructor");
 			this.ui = ui;
 			this.view = view;
 			this.serialInput = serialInput;
@@ -349,7 +337,7 @@ public class PlayingView extends VerticalLayout implements BeforeEnterObserver, 
 
 		@Override
 		public void run() {
-			logger.info("start FeederThread");
+			logger.info("start NormalGameThread");
 			ui.access(() -> view.joueurActuelLabel.setText(actualPlayer.getUsername()));
 			// debug button
 			ui.access(() -> view.debugButton.addClickListener(new ComponentEventListener<ClickEvent<Button>>() {
@@ -371,8 +359,7 @@ public class PlayingView extends VerticalLayout implements BeforeEnterObserver, 
 						confirmNextPlayer = 0;
 						changementJoueur();
 						ui.access(() -> view.joueurSuivantButton.getStyle().set("color", "green"));
-						ui.access(
-								() -> view.scoreNumber.setText(String.valueOf(actualPlayer.getScoreRestant())));
+						ui.access(() -> view.scoreNumber.setText(String.valueOf(actualPlayer.getScoreRestant())));
 
 					}
 				}
@@ -383,7 +370,6 @@ public class PlayingView extends VerticalLayout implements BeforeEnterObserver, 
 				public void accept(DartCaseDto t) {
 					ui.access(() -> view.caseToucheNumber.setText(String.valueOf(t.getValue())));
 					if (isActive) {
-
 						if (actualPlayer.getNombreDeLancee() <= 2
 								|| gameDto.getGameType().getLabel().equals("TRAINING")) {
 							if (actualPlayer.getNombreDeLancee() == 0) { // On sauvegarde a la premiere flechette
@@ -392,7 +378,7 @@ public class PlayingView extends VerticalLayout implements BeforeEnterObserver, 
 							}
 							actualPlayer.setNombreDeLancee(actualPlayer.getNombreDeLancee() + 1);
 							actualPlayer.setNombreDeLanceeTotal(actualPlayer.getNombreDeLanceeTotal() + 1);
-							if(actualPlayer.getNombreDeLancee() == 1) {
+							if (actualPlayer.getNombreDeLancee() == 1) {
 								ui.access(() -> view.flechette3.setVisible(false));
 								ui.access(() -> view.flechetteOff3.setVisible(true));
 							} else if (actualPlayer.getNombreDeLancee() == 2) {
@@ -402,8 +388,7 @@ public class PlayingView extends VerticalLayout implements BeforeEnterObserver, 
 								ui.access(() -> view.flechette1.setVisible(false));
 								ui.access(() -> view.flechetteOff1.setVisible(true));
 							}
-							
-							
+
 							if ((actualPlayer.getScoreRestant() - t.getValue()) == 0) { // Check victoire
 								actualPlayer.setScore(actualPlayer.getScore() + t.getValue());
 								actualPlayer.setScoreRestant(actualPlayer.getScoreRestant() - t.getValue());
@@ -428,7 +413,7 @@ public class PlayingView extends VerticalLayout implements BeforeEnterObserver, 
 							@Override
 							public void accept(PlayerDto t) {
 								// TODO Auto-generated method stub
-								if(t.getScoreRestant() == 0) {
+								if (t.getScoreRestant() == 0) {
 									actualPlayer = t;
 									victoire();
 								}
@@ -450,11 +435,11 @@ public class PlayingView extends VerticalLayout implements BeforeEnterObserver, 
 			}
 			actualPlayer = players.get(indexPlayer);
 			ui.access(() -> view.joueurActuelLabel.setText(actualPlayer.getUsername()));
-			
+
 			ui.access(() -> view.flechette1.setVisible(true));
 			ui.access(() -> view.flechette2.setVisible(true));
 			ui.access(() -> view.flechette3.setVisible(true));
-			
+
 			ui.access(() -> view.flechetteOff1.setVisible(false));
 			ui.access(() -> view.flechetteOff2.setVisible(false));
 			ui.access(() -> view.flechetteOff3.setVisible(false));
@@ -464,13 +449,14 @@ public class PlayingView extends VerticalLayout implements BeforeEnterObserver, 
 		private void victoire() {
 			System.out.println("victoire de " + actualPlayer.getUsername());
 			gameService.setGameActive(false, gameDto.getId());
+			gameService.setIdPlayerWin(actualPlayer.getId(), gameDto.getId());
 			isActive = false;
 			ui.access(() -> view.joueurHL.setVisible(false));
 			ui.access(() -> view.scoreHL.setVisible(false));
-			
+
 			ui.access(() -> view.victoireHL.setVisible(true));
 			ui.access(() -> view.victoireUsername.setText(actualPlayer.getUsername()));
-			
+
 		}
 
 		private void scoreFailed() {
@@ -482,7 +468,10 @@ public class PlayingView extends VerticalLayout implements BeforeEnterObserver, 
 
 		private void saveDartInput(DartCaseDto dartCaseDto) {
 			DartInputDto dartInputDto = DartInputDto.builder().game(this.gameDto).player(actualPlayer)
-					.score(dartCaseDto.getValue()).input(dartCaseDto.getLabel()).build();
+					.score(dartCaseDto.getValue()).input(dartCaseDto.getLabel())
+					.acurate(1)
+					.tentative(1)
+					.build();
 			dartInputService.save(dartInputDto);
 		}
 

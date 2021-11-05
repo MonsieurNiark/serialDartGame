@@ -13,5 +13,5 @@ public class GameTypeDto implements Serializable {
 	
 	private final String label;
 	
-	private final int maxScore;
+	private final Integer maxScore;
 }

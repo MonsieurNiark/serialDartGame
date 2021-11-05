@@ -44,4 +44,10 @@ public class DartInput implements Serializable{
 	private Integer score;
 	
 	private String input;
+	
+	@Column(name = "acurate")
+	private float acurate;
+	
+	@Column(name = "tentative")
+	private Integer tentative;
 }

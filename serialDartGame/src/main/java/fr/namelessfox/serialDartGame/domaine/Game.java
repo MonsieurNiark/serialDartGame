@@ -49,4 +49,7 @@ public class Game implements Serializable{
 	@OneToMany(fetch = FetchType.EAGER)
 	@JoinTable(name = "game_players")
 	private List<Player> players;
+	
+	@Column(name = "id_player_win")
+	private Integer idPlayerWin;
 }

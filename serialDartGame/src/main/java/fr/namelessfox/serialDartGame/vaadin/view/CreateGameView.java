@@ -1,7 +1,9 @@
 package fr.namelessfox.serialDartGame.vaadin.view;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -13,6 +15,7 @@ import com.vaadin.flow.component.ComponentUtil;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
@@ -32,6 +35,8 @@ public class CreateGameView extends VerticalLayout{
 	private final GameTypeService gameTypeService;
 	
 	private final PlayerService playerService;
+    private final SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy_HH:mm:ss");  
+
 	
 	@Autowired
 	public CreateGameView(final GameTypeService gameTypeService, PlayerService playerService) {
@@ -42,6 +47,17 @@ public class CreateGameView extends VerticalLayout{
 		mainLayout.setSizeFull();
 		
 		TextField gameName = new TextField("Nom de la partie");
+		Button randName = new Button("random");
+		randName.getStyle().set("margin-top", "35px");
+		HorizontalLayout nameLayout = new HorizontalLayout(gameName, randName);
+
+		randName.addClickListener(new ComponentEventListener<ClickEvent<Button>>() {
+
+			@Override
+			public void onComponentEvent(ClickEvent<Button> event) {
+				gameName.setValue(formatter.format(new Date()));
+			}
+		});
 		Select<GameTypeDto> selectGameType = new Select<>();
 		selectGameType.setItemLabelGenerator(GameTypeDto::getLabel);
 		List<GameTypeDto> gameTypeDtos = this.gameTypeService.getListGameTypes();
@@ -68,7 +84,11 @@ public class CreateGameView extends VerticalLayout{
 									.players(new ArrayList<>(playerGrid.getSelectedItems())).build();
 							System.out.println(gameDto.toString());
 							UI.getCurrent().getSession().setAttribute(GameDto.class, gameDto);
-							t.navigate(ConstantesRoutes.PLAYING);
+							if(gameDto.getGameType().getLabel().toLowerCase().contains("precision")) {
+								t.navigate(ConstantesRoutes.PRECISION);
+							} else {
+								t.navigate(ConstantesRoutes.PLAYING);
+							}
 						}
 						
 					}
@@ -77,7 +97,7 @@ public class CreateGameView extends VerticalLayout{
 				
 			}
 		});
-		mainLayout.add(gameName, selectGameType,playerGrid, creerGame);
+		mainLayout.add(nameLayout, selectGameType,playerGrid, creerGame);
 		add(mainLayout);
 		setClassName("default-background");
 		setSizeFull();

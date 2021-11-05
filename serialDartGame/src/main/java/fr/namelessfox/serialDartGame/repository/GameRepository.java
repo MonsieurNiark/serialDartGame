@@ -19,4 +19,10 @@ public interface GameRepository extends JpaRepository<Game, Integer> {
 	@Modifying
 	@Query("UPDATE Game g SET g.active=?1 WHERE  g.id = ?2")
 	void setGameActive(boolean active, Integer id);
+	
+	@Transactional
+	@Modifying
+	@Query("UPDATE Game g SET g.idPlayerWin=?1 WHERE  g.id = ?2")
+	void setIdPlayerWin(Integer idPlayerWin, Integer id);
+	
 }

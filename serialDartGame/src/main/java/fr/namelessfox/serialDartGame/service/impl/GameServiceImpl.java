@@ -57,4 +57,12 @@ public class GameServiceImpl implements GameService{
 		return gameMapper.entityToDtos(gameRepository.findAll());
 	}
 
+	@Override
+	public void setIdPlayerWin(Integer idPlayerWin, Integer id) {
+		gameRepository.setIdPlayerWin(idPlayerWin, id);
+		
+	}
+	
+	
+
 }

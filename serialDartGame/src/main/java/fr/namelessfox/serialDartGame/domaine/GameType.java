@@ -27,5 +27,5 @@ public class GameType implements Serializable{
 	private String label;
 	
 	@Column(name = "max_score")
-	private int maxScore;
+	private Integer maxScore;
 }

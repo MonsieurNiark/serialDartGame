@@ -18,4 +18,8 @@ public class DartInputDto {
 	private final Integer score;
 	
 	private final String input;
+	
+	private final float acurate;
+	
+	private final Integer tentative;
 }

@@ -19,4 +19,6 @@ public class GameDto implements Serializable {
 	private final GameTypeDto gameType;
 	
 	private final List<PlayerDto> players;
+	
+	private final Integer idPlayerWin;
 }
